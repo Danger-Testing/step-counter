@@ -18,7 +18,7 @@ export async function GET(req: Request) {
     return Response.json({ error: "Missing userId" }, { status: 400 })
   }
 
-  const steps = getSteps(userId) ?? 0
+  const steps = await getSteps(userId)
 
   return Response.json({
     userId,

@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "Invalid payload" }, { status: 400 })
   }
 
-  saveSteps(userId, steps)
+  await saveSteps(userId, steps)
 
   return Response.json({ ok: true, userId, steps })
 }
