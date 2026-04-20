@@ -1,21 +1,18 @@
-import { saveSteps } from "@/lib/store"
+import { createLinkCode } from "@/lib/store"
 import { errorResponse } from "@/lib/errors"
 
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { appUserId, steps } = body
+    const { appUserId } = body
 
     if (!appUserId || typeof appUserId !== "string") {
       return Response.json({ error: "Missing appUserId" }, { status: 400 })
     }
-    if (typeof steps !== "number" || steps < 0) {
-      return Response.json({ error: "Invalid steps" }, { status: 400 })
-    }
 
-    await saveSteps(appUserId, steps)
+    const { code, expiresAt } = await createLinkCode(appUserId)
 
-    return Response.json({ ok: true, appUserId, steps })
+    return Response.json({ code, expiresAt })
   } catch (e) {
     return errorResponse(e)
   }

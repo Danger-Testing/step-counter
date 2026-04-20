@@ -1,28 +1,32 @@
-import { getSteps } from "@/lib/store"
+import { resolveRobloxUser, getSteps } from "@/lib/store"
+import { getMapConfig } from "@/lib/world"
+import { errorResponse, AppError } from "@/lib/errors"
 
 export const dynamic = "force-dynamic"
 
-function getMapConfig(steps: number) {
-  if (steps < 2000) return { trees: 1, tower: false }
-  if (steps < 5000) return { trees: 4, tower: false }
-  if (steps < 8000) return { trees: 8, tower: false }
-  if (steps < 12000) return { trees: 12, tower: true }
-  return { trees: 20, tower: true }
-}
-
 export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url)
-  const userId = searchParams.get("userId")
+  try {
+    const { searchParams } = new URL(req.url)
+    const robloxUserId = searchParams.get("robloxUserId")
 
-  if (!userId) {
-    return Response.json({ error: "Missing userId" }, { status: 400 })
+    if (!robloxUserId) {
+      return Response.json({ error: "Missing robloxUserId" }, { status: 400 })
+    }
+
+    const appUserId = await resolveRobloxUser(robloxUserId)
+    if (!appUserId) {
+      throw new AppError(404, "Roblox account not linked")
+    }
+
+    const steps = await getSteps(appUserId)
+
+    return Response.json({
+      robloxUserId,
+      appUserId,
+      steps,
+      mapConfig: getMapConfig(steps),
+    })
+  } catch (e) {
+    return errorResponse(e)
   }
-
-  const steps = await getSteps(userId)
-
-  return Response.json({
-    userId,
-    steps,
-    mapConfig: getMapConfig(steps),
-  })
 }
